@@ -1,0 +1,44 @@
+BUILDING THE CONTAINERS:
+
+### Building the ODL-OFM Container:
+
+apt-get update
+apt-get install -y bash-completion software-properties-common python-software-properties sudo curl ssh git
+nano /etc/ssh/sshd_config  ###(change PermitRootLogin to yes)
+service ssh start
+ssh-keygen -t rsa -P ""
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
+sudo apt-get install oracle-java8-installer oracle-java8-set-default 
+
+nano ~/.bashrc
+export JAVA_HOME="/usr/lib/jvm/java-8-oracle"
+. ~/.bashrc
+
+echo $JAVA_HOME    ### Verification
+
+wget https://nexus.opendaylight.org/content/groups/public/org/opendaylight/integration/distribution-karaf/0.3.0-Lithium/distribution-karaf-0.3.0-Lithium.tar.gz
+
+tar zxvf distribution-karaf-0.3.0-Lithium.tar.gz
+
+ifconfig ### To see what IP the DHCP server gave it
+passwd   ### Set root password of docker container
+
+curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
+apt-get install nodejs
+git clone https://github.com/CiscoDevNet/OpenDaylight-Openflow-App.git
+sed -i 's/localhost/<server_ip>/g' ./OpenDaylight-Openflow-App/ofm/src/common/config/env.module.js  ### Use the IP we noted earlier, for "server_ip"
+npm install -g grunt-cli
+
+cd distribution-karaf-0.3.0-Lithium
+./bin/karaf
+feature:install odl-restconf-all odl-openflowplugin-all odl-l2switch-all odl-mdsal-all odl-yangtools-common
+
+### Once the ODL cli comes back, SSH into the ODL+OFM container from a different Ubuntu container; and run these:
+cd OpenDaylight-Openflow-App
+grunt
+
+### "http://localhost:9000" will display.
+ 
+
+### ODL and OFM are now ready
